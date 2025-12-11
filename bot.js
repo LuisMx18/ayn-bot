@@ -158,34 +158,39 @@ client.on('messageCreate', async (message) => {
 // Evento: usuario se une al servidor
 client.on('guildMemberAdd', async (member) => {
   try {
-    // Obtener canal general
-    const welcomeChannel = member.guild.channels.cache.find(
-      channel => channel.isTextBased() && (channel.name === 'general' || channel.name === 'bienvenida')
-    ) || member.guild.systemChannel;
+    console.log(`📝 Usuario ${member.user.tag} se unió al servidor`);
 
-    // Obtener canal de normas
-    const rulesChannel = member.guild.channels.cache.find(
-      channel => channel.isTextBased() && channel.name === 'normas'
+    // Obtener canal general o bienvenida
+    const welcomeChannel = member.guild.channels.cache.find(
+      channel => channel.isTextBased() && 
+        (channel.name.includes('general') || channel.name.includes('bienvenida') || channel.name.includes('welcome'))
     );
 
     if (!welcomeChannel) {
-      console.log('❌ No se encontró canal para enviar bienvenida');
+      console.log(`❌ No se encontró canal de bienvenida en ${member.guild.name}`);
       return;
     }
+
+    // Obtener canal de normas
+    const rulesChannel = member.guild.channels.cache.find(
+      channel => channel.isTextBased() && channel.name.includes('normas')
+    );
 
     const welcomeEmbed = new EmbedBuilder()
       .setColor('#FF1493')
       .setTitle(`🎉 ¡Bienvenido ${member.user.username}!`)
-      .setDescription(`¡Hola ${member}! 👋\n\nBienvenido a **${member.guild.name}**. Antes de empezar, por favor lee las normas del servidor.\n\n${rulesChannel ? `📋 Lee las normas en ${rulesChannel}` : ''}`)
+      .setDescription(`¡Hola ${member}! 👋\n\nBienvenido a **${member.guild.name}**.\n\nPor favor, lee las normas del servidor antes de interactuar.\n${rulesChannel ? `\n📋 Normas: ${rulesChannel}` : ''}`)
       .setImage('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdmowYTZkNzJqMWo3YWs3b3J4YWZveHZucWZyMTZtNjBkMDB0MjBkZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3o85xIO33l7RlmLR4I/giphy.gif')
       .setFooter({ text: '¡Esperamos que disfrutes tu estadía! 😊' })
       .setTimestamp();
 
     await welcomeChannel.send({ content: `${member}`, embeds: [welcomeEmbed] });
-    console.log(`✓ Mensaje de bienvenida enviado para ${member.user.tag}`);
+    console.log(`✅ Mensaje de bienvenida enviado a ${welcomeChannel.name}`);
+
   } catch (error) {
-    console.error(`❌ Error enviando mensaje de bienvenida:`, error);
+    console.error(`❌ Error en guildMemberAdd:`, error);
   }
 });
+
 
 client.login(process.env.DISCORD_TOKEN);
