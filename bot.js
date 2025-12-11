@@ -158,68 +158,33 @@ client.on('messageCreate', async (message) => {
 // Evento: usuario se une al servidor
 client.on('guildMemberAdd', async (member) => {
   try {
-    const dmEmbed = new EmbedBuilder()
+    // Obtener canal general
+    const welcomeChannel = member.guild.channels.cache.find(
+      channel => channel.isTextBased() && (channel.name === 'general' || channel.name === 'bienvenida')
+    ) || member.guild.systemChannel;
+
+    // Obtener canal de normas
+    const rulesChannel = member.guild.channels.cache.find(
+      channel => channel.isTextBased() && channel.name === 'normas'
+    );
+
+    if (!welcomeChannel) {
+      console.log('❌ No se encontró canal para enviar bienvenida');
+      return;
+    }
+
+    const welcomeEmbed = new EmbedBuilder()
       .setColor('#FF1493')
-      .setTitle('𝐖𝐄𝐋𝐂𝐎𝐌𝐄 𝐓𝐎 𝐒𝐓𝐀𝐅𝐅 𝐀&𝐍')
-      .setDescription('¡Bienvenido a nuestro servidor! Lee las normas antes de interactuar.')
-      .addFields(
-        {
-          name: '𝐒𝐓𝐀𝐅𝐅 𝐀&𝐍\n𝐍𝐎𝐑𝐌𝐀𝐒 𝐀&𝐍',
-          value: `
-**1. Respeto ante todo**
-No insultos, acoso, bullying ni discriminación.
-Nada de discurso de odio ni ataques personales.
-
-**2. Contenido y derechos de autor**
-No plagio: si usás arte o contenido de otros, da crédito.
-No reclames como propio lo que no hiciste.
-
-**3. Contenido prohibido**
-No sexual, pornografía ni insinuaciones con menores.
-No gore, violencia gráfica, contenido perturbador o sensible.
-No imágenes que puedan afectar a personas con epilepsia (gifs parpadeantes).
-
-**4. Spam y publicidad**
-No autopromoción, publicidad, ventas ni spam de links/mensajes.
-Evitá publicar demasiados posts en poco tiempo.
-
-**5. Privacidad**
-No compartas ni pidas información personal (tuya o de otros).
-Prohibido el doxxing.
-
-❤ **6. Bienestar y seguridad**
-No contenido que promueva autolesiones, suicidio o daño físico/psicológico.
-Si ves algo inapropiado, no respondas: reportalo al staff.
-
-⚠ **7. Actividades prohibidas**
-Nada de fraudes, estafas, actividades ilegales o ventas de bienes regulados.
-Prohibido crear cuentas "alts" para evadir sanciones.
-
-**8. Publicaciones y chats**
-Mantené el contenido relevante al servidor.
-Debates permitidos, pero con respeto.
-Todo el contenido debe ser apto y legal.
-
-**9. Edad mínima**
-✘ No se permite la entrada de menores de 16 años en el servidor.
-
----
-
-**Normas del Staff**
-Trato respetuoso y justo hacia todos.
-Reglas claras y aplicadas por igual.
-Sanciones transparentes: si es posible, avisar y explicar qué norma se violó.
-          `,
-          inline: false
-        }
-      )
-      .setFooter({ text: '¡Diviértete y respeta a la comunidad!' })
+      .setTitle(`🎉 ¡Bienvenido ${member.user.username}!`)
+      .setDescription(`¡Hola ${member}! 👋\n\nBienvenido a **${member.guild.name}**. Antes de empezar, por favor lee las normas del servidor.\n\n${rulesChannel ? `📋 Lee las normas en ${rulesChannel}` : ''}`)
+      .setImage('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdmowYTZkNzJqMWo3YWs3b3J4YWZveHZucWZyMTZtNjBkMDB0MjBkZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3o85xIO33l7RlmLR4I/giphy.gif')
+      .setFooter({ text: '¡Esperamos que disfrutes tu estadía! 😊' })
       .setTimestamp();
 
-    await member.send({ embeds: [dmEmbed] });
-    console.log(`✓ DM enviado a ${member.user.tag}`);
+    await welcomeChannel.send({ content: `${member}`, embeds: [welcomeEmbed] });
+    console.log(`✓ Mensaje de bienvenida enviado para ${member.user.tag}`);
   } catch (error) {
-    console.error(`❌ Error enviando DM a ${member.user.tag}:`, error);
+    console.error(`❌ Error enviando mensaje de bienvenida:`, error);
   }
 });
 
