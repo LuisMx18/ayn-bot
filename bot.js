@@ -179,9 +179,36 @@ client.on('guildMemberAdd', async (member) => {
     const welcomeEmbed = new EmbedBuilder()
       .setColor('#FF1493')
       .setTitle(`🎉 ¡Bienvenido ${member.user.username}!`)
-      .setDescription(`¡Hola ${member}! 👋\n\nBienvenido a **${member.guild.name}**.\n\nPor favor, lee las normas del servidor antes de interactuar.\n${rulesChannel ? `\n📋 Normas: ${rulesChannel}` : ''}`)
-      .setImage('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdmowYTZkNzJqMWo3YWs3b3J4YWZveHZucWZyMTZtNjBkMDB0MjBkZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3o85xIO33l7RlmLR4I/giphy.gif')
-      .setFooter({ text: '¡Esperamos que disfrutes tu estadía! 😊' })
+      .setDescription(`¡Hola ${member}! 👋\n\nBienvenido a **${member.guild.name}**, una comunidad dedicada a las dinámicas sociales, anime y mucho más. Nos alegra mucho que te unas a nosotros.`)
+      .addFields(
+        {
+          name: '📋 Primeros Pasos',
+          value: `Antes de empezar, asegúrate de leer nuestras ${rulesChannel ? `normas en ${rulesChannel}` : '**normas del servidor**'}. Son rápidas de leer y nos ayudan a mantener un espacio seguro y respetuoso para todos.`,
+          inline: false
+        },
+        {
+          name: '👥 ¿Necesitas Ayuda?',
+          value: `Nuestro **staff estará encantado de ayudarte**. No dudes en hacer preguntas si algo no te queda claro. Estamos aquí para que disfrutes al máximo de la comunidad.`,
+          inline: false
+        },
+        {
+          name: '🎮 Dinámicas y Eventos',
+          value: `Contamos con **dinámicas semanales**, **minijuegos**, **actividades diarias** y eventos especiales para mantener la comunidad activa y divertida. ¡No te los pierdas!`,
+          inline: false
+        },
+        {
+          name: '⭐ Actividad Diaria',
+          value: `Participa en nuestros minijuegos diarios como **Piedra, Papel o Tijera** (\`/rps\`) para ganar puntos y compite en el leaderboard con otros miembros de la comunidad.`,
+          inline: false
+        },
+        {
+          name: '💬 Interactúa',
+          value: `Siéntete libre de compartir tus opiniones, crear debates respetuosos y conectar con otros miembros. La comunidad crece con tu participación.`,
+          inline: false
+        }
+      )
+      .setImage('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNDBpMGEzZHY3dDI1bWtzaGQ5bWI3NmNncGdieDlvNmxtMmJoZm00OSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3ov9jIYPU7NMT6TS7K/giphy.gif')
+      .setFooter({ text: '¡Esperamos que disfrutes tu estadía! 😊 Bienvenido a la familia.' })
       .setTimestamp();
 
     await welcomeChannel.send({ content: `${member}`, embeds: [welcomeEmbed] });
@@ -191,6 +218,5 @@ client.on('guildMemberAdd', async (member) => {
     console.error(`❌ Error en guildMemberAdd:`, error);
   }
 });
-
 
 client.login(process.env.DISCORD_TOKEN);
