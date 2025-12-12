@@ -236,4 +236,94 @@ client.on('guildMemberAdd', async (member) => {
   }
 });
 
+const cron = require('node-cron');
+const axios = require('axios');
+
+const genres = ['fantasy', 'science fiction', 'mystery', 'romance', 'adventure', 'classic literature', 'anime', 'manga'];
+
+async function getRandomBookFromAPI() {
+  try {
+    const randomGenre = genres[Math.floor(Math.random() * genres.length)];
+    const randomSort = Math.floor(Math.random() * 2) === 0 ? 'newest' : 'relevance';
+    
+    const response = await axios.get('https://www.googleapis.com/books/v1/volumes', {
+      params: {
+        q: randomGenre,
+        maxResults: 40,
+        orderBy: randomSort,
+        langRestrict: 'es'
+      }
+    });
+
+    if (!response.data.items || response.data.items.length === 0) {
+      console.log('❌ No se encontraron libros');
+      return null;
+    }
+
+    const randomBook = response.data.items[Math.floor(Math.random() * response.data.items.length)];
+    const info = randomBook.volumeInfo;
+
+    return {
+      title: info.title || 'Sin título',
+      author: info.authors ? info.authors.join(', ') : 'Autor desconocido',
+      synopsis: info.description || 'Sinopsis no disponible',
+      image: info.imageLinks?.thumbnail || 'https://via.placeholder.com/128x200?text=Sin+Portada',
+      genre: randomGenre.charAt(0).toUpperCase() + randomGenre.slice(1),
+      publishedDate: info.publishedDate || 'Fecha desconocida',
+      pageCount: info.pageCount || 'N/A',
+      rating: info.averageRating || 'Sin rating'
+    };
+  } catch (error) {
+    console.error('❌ Error obteniendo libro de API:', error.message);
+    return null;
+  }
+}
+
+cron.schedule('0 14 * * *', async () => {
+  try {
+    console.log('📚 Obteniendo recomendación de libro del API...');
+    
+    const bookChannel = client.channels.cache.find(
+      channel => channel.isTextBased() && 
+        (channel.name.includes('libro') || channel.name.includes('diario'))
+    );
+
+    if (!bookChannel) {
+      console.log('❌ Canal de libros no encontrado. Crea un canal con "libro" o "diario" en el nombre.');
+      return;
+    }
+
+    const book = await getRandomBookFromAPI();
+
+    if (!book) {
+      await bookChannel.send('⚠️ Error al obtener la recomendación de hoy. Intenta más tarde.');
+      return;
+    }
+
+    const synopsis = book.synopsis.length > 300 
+      ? book.synopsis.substring(0, 300) + '...' 
+      : book.synopsis;
+
+    const bookEmbed = new EmbedBuilder()
+      .setColor('#8B4513')
+      .setTitle(`📖 Recomendación del Día: ${book.title}`)
+      .setDescription(`**Autor:** ${book.author}\n\n**Sinopsis:**\n${synopsis}`)
+      .setImage(book.image)
+      .addFields(
+        { name: '📚 Género', value: book.genre, inline: true },
+        { name: '⭐ Rating', value: book.rating.toString(), inline: true },
+        { name: '📄 Páginas', value: book.pageCount.toString(), inline: true },
+        { name: '📅 Publicado', value: book.publishedDate, inline: true }
+      )
+      .setFooter({ text: '¡Disfruta la lectura! 🎉' })
+      .setTimestamp();
+
+    await bookChannel.send({ embeds: [bookEmbed] });
+    console.log(`✅ Libro recomendado: ${book.title} por ${book.author}`);
+
+  } catch (error) {
+    console.error('❌ Error en cron de libros:', error);
+  }
+});
+
 client.login(process.env.DISCORD_TOKEN);
