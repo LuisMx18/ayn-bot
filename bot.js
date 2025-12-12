@@ -59,7 +59,8 @@ const commands = [
   new SlashCommandBuilder().setName('rps').setDescription('Juega Piedra, Papel o Tijera y gana puntos').addStringOption(option => option.setName('opcion').setDescription('Elige: rock, paper o scissors').setRequired(true).addChoices({ name: 'Piedra 🪨', value: 'rock' }, { name: 'Papel 📄', value: 'paper' }, { name: 'Tijera ✂️', value: 'scissors' })),
   new SlashCommandBuilder().setName('balance').setDescription('Ver tu balance de puntos'),
   new SlashCommandBuilder().setName('leaderboard').setDescription('Ver el ranking de puntos del servidor'),
-  new SlashCommandBuilder().setName('help').setDescription('Muestra todos los comandos')
+  new SlashCommandBuilder().setName('help').setDescription('Muestra todos los comandos'),
+  new SlashCommandBuilder().setName('libro').setDescription('Obtén una recomendación de libro al instante'),
 ].map(command => command.toJSON());
 
 client.once('clientReady', async () => {
@@ -146,7 +147,32 @@ client.on('interactionCreate', async (interaction) => {
         { name: '/help', value: 'Muestra este mensaje', inline: false }
       );
       await interaction.reply({ embeds: [helpEmbed], ephemeral: false });
-    }
+    } else if (commandName === 'libro') {
+  await interaction.deferReply();
+  const book = await getRandomBookFromAPI();
+  if (!book) {
+    await interaction.editReply({ content: '⚠️ Error al obtener el libro. Intenta más tarde.' });
+    return;
+  }
+  const synopsis = book.synopsis.length > 300 
+    ? book.synopsis.substring(0, 300) + '...' 
+    : book.synopsis;
+
+  const bookEmbed = new EmbedBuilder()
+    .setColor('#8B4513')
+    .setTitle(`📖 ${book.title}`)
+    .setDescription(`**Autor:** ${book.author}\n\n**Sinopsis:**\n${synopsis}`)
+    .setImage(book.image)
+    .addFields(
+      { name: '📚 Género', value: book.genre, inline: true },
+      { name: '⭐ Rating', value: book.rating.toString(), inline: true },
+      { name: '📄 Páginas', value: book.pageCount.toString(), inline: true },
+      { name: '📅 Publicado', value: book.publishedDate, inline: true }
+    )
+    .setFooter({ text: '¡Disfruta la lectura! 🎉' })
+    .setTimestamp();
+  await interaction.editReply({ embeds: [bookEmbed] });
+}
   } catch (error) {
     console.error('Error en interacción:', error);
     await interaction.reply({ content: '❌ Error al procesar comando', ephemeral: true }).catch(() => {});
@@ -197,15 +223,39 @@ client.on('messageCreate', async (message) => {
         { name: '/rps [opcion]', value: 'Juega Piedra, Papel o Tijera y gana puntos\n• Ganar: +50 pts\n• Empate: +10 pts\n• Perder: -10 pts', inline: false },
         { name: '/balance', value: 'Ver tu balance de puntos y estadísticas', inline: false },
         { name: '/leaderboard', value: 'Ver el ranking de los top 10 jugadores', inline: false },
-        { name: '/help', value: 'Muestra este mensaje', inline: false }
+        { name: '/help', value: 'Muestra este mensaje', inline: false },
+        { name: '/libro', value: 'Obtén una recomendación de libro al instante', inline: false },
       );
       await message.reply({ embeds: [helpEmbed] });
-    }
+    } else if (message.content === '!libro') {
+  const loadingMsg = await message.reply('📚 Obteniendo recomendación...');
+  const book = await getRandomBookFromAPI();
+  if (!book) {
+    await loadingMsg.edit({ content: '⚠️ Error al obtener el libro. Intenta más tarde.' });
+    return;
+  }
+  const synopsis = book.synopsis.length > 300 
+    ? book.synopsis.substring(0, 300) + '...' 
+    : book.synopsis;
+  const bookEmbed = new EmbedBuilder()
+    .setColor('#8B4513')
+    .setTitle(`📖 ${book.title}`)
+    .setDescription(`**Autor:** ${book.author}\n\n**Sinopsis:**\n${synopsis}`)
+    .setImage(book.image)
+    .addFields(
+      { name: '📚 Género', value: book.genre, inline: true },
+      { name: '⭐ Rating', value: book.rating.toString(), inline: true },
+      { name: '📄 Páginas', value: book.pageCount.toString(), inline: true },
+      { name: '📅 Publicado', value: book.publishedDate, inline: true }
+    )
+    .setFooter({ text: '¡Disfruta la lectura! 🎉' })
+    .setTimestamp();
+  await loadingMsg.edit({ embeds: [bookEmbed], content: '' });
+}
   } catch (error) {
     console.error('Error procesando mensaje:', error);
   }
 });
-
 client.on('guildMemberAdd', async (member) => {
   try {
     console.log(`📝 Usuario ${member.user.tag} se unió al servidor`);
